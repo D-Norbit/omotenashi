@@ -1,463 +1,582 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { RotateCcw, ChevronRight, Crown, AlertTriangle, Check, Star, Skull } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omotenashi Trap Challenge</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.23.9/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
 
-const questions = [
-  {
-    scenario: "Khách già người Nhật ngồi một mình ở lobby đã 2 tiếng, nhìn ra trời mưa, thỉnh thoảng thở dài. Bạn đi ngang nhiều lần.",
-    options: [
-      { label: "A", text: "Mang trà ấm ra, ngồi xuống cạnh hỏi thăm, trò chuyện cho khách bớt buồn", points: 15, trap: true },
-      { label: "B", text: "Lặng lẽ đặt trà ấm và bánh nhỏ bên cạnh, mỉm cười: \"Trời mưa lạnh, mời bác dùng trà ạ\" — cúi đầu rồi lui đi", points: 40 },
-      { label: "C", text: "Để khách yên, tôn trọng không gian cá nhân, chỉ hỗ trợ khi được yêu cầu", points: 20 },
-      { label: "D", text: "Hỏi khách có cần gọi taxi hay hỗ trợ đi đâu không", points: 10 },
-    ],
-    explanation: "BẪY \"Tận tâm quá mức\": Ngồi xuống trò chuyện (A) nghe ấm áp nhưng XÂM PHẠM không gian riêng tư — đặc biệt khách Nhật. Omotenashi: CÓ MẶT nhưng KHÔNG ÁP ĐẶT.",
-  },
-  {
-    scenario: "Khách phát hiện gián chết trong phòng tắm, gọi run giọng: \"Tôi dị ứng côn trùng, tôi KHÔNG THỂ ở phòng này!\"",
-    options: [
-      { label: "A", text: "Xin lỗi, LẬP TỨC đổi phòng đã kiểm tra kỹ, đích thân đưa khách sang, tặng voucher spa, 30 phút sau gọi hỏi thăm", points: 40 },
-      { label: "B", text: "Xin lỗi, cử người lên dọn sạch phòng và phun khử trùng cho khách yên tâm", points: 5, trap: true },
-      { label: "C", text: "Xin lỗi, upgrade miễn phí lên suite và tặng bữa tối", points: 30 },
-      { label: "D", text: "Xin lỗi, đổi phòng ngay và giảm 50% tiền phòng đêm nay", points: 20 },
-    ],
-    explanation: "BẪY \"Xin lỗi là xong\": Dọn phòng + phun thuốc (B) nghe chuyên nghiệp nhưng khách nói KHÔNG THỂ ở — ai muốn ngủ phòng vừa phun hoá chất? Omotenashi: hành động NGAY + theo dõi SAU.",
-  },
-  {
-    scenario: "Khách hỏi thẳng: \"Nói thật đi, resort có gì chơi? Hay chỉ mỗi cái hồ bơi?\" Thực tế resort khá ít hoạt động giải trí so với đối thủ.",
-    options: [
-      { label: "A", text: "\"Dạ resort có hồ bơi, spa, nhà hàng ạ\" — liệt kê trung thực", points: 10 },
-      { label: "B", text: "\"Dạ nói thật resort ít hoạt động, nhưng gần đây có khu du lịch X rất vui ạ\"", points: 5, trap: true },
-      { label: "C", text: "\"Dạ anh/chị muốn trải nghiệm gì ạ? Để em tư vấn phù hợp\"", points: 25 },
-      { label: "D", text: "\"Resort mình tập trung trải nghiệm NGHỈ NGƠI đích thực — nhưng em có bản đồ bí mật 5 điểm local mà du khách ít biết, muốn thử không?\"", points: 40 },
-    ],
-    explanation: "BẪY \"Thật thà quá lố\": Thừa nhận yếu kém rồi giới thiệu nơi khác (B) = HẠI THƯƠNG HIỆU. Omotenashi: biến điểm yếu thành CÂU CHUYỆN hấp dẫn!",
-  },
-  {
-    scenario: "Đồng nghiệp mới run rẩy phục vụ bàn VIP lần đầu. Bạn thấy đồng nghiệp suýt đổ nước vào người khách. Khách chưa nhận ra.",
-    options: [
-      { label: "A", text: "Bước đến đỡ khay ngay, phục vụ bàn VIP thay đồng nghiệp cho an toàn", points: 15, trap: true },
-      { label: "B", text: "Bước đến tự nhiên kiểu cùng phục vụ bàn VIP, đứng cạnh hỗ trợ nhẹ nhàng để đồng nghiệp vẫn là người chính", points: 40 },
-      { label: "C", text: "Để đồng nghiệp tự xử lý — sai lầm là cách học tốt nhất", points: 5 },
-      { label: "D", text: "Ra hiệu cho đồng nghiệp vào trong, hướng dẫn nhanh kỹ thuật rồi cho quay ra tiếp", points: 25 },
-    ],
-    explanation: "BẪY \"Giúp = Giành\": Nhảy vào làm thay (A) = đồng nghiệp MẤT MẶT trước VIP. Omotenashi: nâng đỡ CẢ khách LẪN đồng nghiệp cùng lúc.",
-  },
-  {
-    scenario: "Khách la lối ở bar, xúc phạm bartender: \"Mày pha cái gì? Đồ vô dụng!\" Bartender sắp khóc. Cocktail đúng recipe nhưng không hợp khẩu vị khách.",
-    options: [
-      { label: "A", text: "Xin lỗi khách, pha lại theo ý khách ngay, an ủi bartender sau ca", points: 20 },
-      { label: "B", text: "Mời khách vào khu riêng, lịch sự giải thích cocktail đúng recipe quốc tế chuẩn", points: 5, trap: true },
-      { label: "C", text: "Bình tĩnh: \"Dạ em pha lại đúng ý anh/chị ngay, thích vị thế nào ạ?\" — tự nhiên đứng chắn cho bartender rút lui lấy lại bình tĩnh", points: 40 },
-      { label: "D", text: "Gọi quản lý ra xử lý vì tình huống vượt thẩm quyền", points: 15 },
-    ],
-    explanation: "BẪY \"Giải thích = Sửa khách\": Dù recipe đúng (B), giải thích = nói \"anh/chị SAI\". Omotenashi: giải quyết cảm xúc khách + BẢO VỆ đồng nghiệp cùng lúc.",
-  },
-  {
-    scenario: "Qua booking bạn thấy hôm nay sinh nhật khách phòng 302. Khách đi MỘT MÌNH, dáng vẻ trầm lặng, suốt ngày ở trong phòng, không đề cập sinh nhật.",
-    options: [
-      { label: "A", text: "Lặng lẽ để trong phòng bông hoa nhỏ + thiệp viết tay: \"Chúc ngày hôm nay thật đặc biệt ✿\" — KHÔNG nhắc từ \"sinh nhật\"", points: 40 },
-      { label: "B", text: "Trang trí phòng + bánh kem + cả team hát Happy Birthday khi khách mở cửa — bất ngờ tuyệt vời!", points: 5, trap: true },
-      { label: "C", text: "Không làm gì cả — nếu khách muốn kỷ niệm thì đã nói rồi", points: 20 },
-      { label: "D", text: "Gọi điện hỏi: \"Em biết hôm nay ngày đặc biệt, anh/chị muốn KS tổ chức gì không?\"", points: 15 },
-    ],
-    explanation: "BẪY \"Surprise = Vui\": Tổ chức hoành tráng (B) nhưng khách đi MỘT MÌNH + trầm lặng — sinh nhật có thể gắn với MẤT MÁT. Omotenashi: sưởi ấm mà KHÔNG chạm vào vết thương.",
-  },
-  {
-    scenario: "23h, gia đình 4 người (2 trẻ nhỏ mệt mỏi) đến không có booking — KS khác huỷ phút chót. Chỉ còn 1 suite giá rất cao, vượt xa ngân sách.",
-    options: [
-      { label: "A", text: "Báo giá đúng quy định, nếu không phù hợp thì giới thiệu KS gần đó", points: 15 },
-      { label: "B", text: "Thương gia đình nên tự quyết cho ở suite với giá phòng thường luôn", points: 10, trap: true },
-      { label: "C", text: "Mời ngồi nghỉ, trà nước + khăn ấm cho trẻ, GỌI quản lý xin áp giá đặc biệt — đúng quy trình mà vẫn có tình", points: 40 },
-      { label: "D", text: "Gọi điện giúp gia đình tìm KS khác còn phòng phù hợp ngân sách", points: 25 },
-    ],
-    explanation: "BẪY \"Tốt bụng = Tự quyết\": Tự ý giảm giá (B) rất đẹp nhưng VI PHẠM thẩm quyền — có thể bị sa thải. Omotenashi thông minh: chăm sóc ngay + giải pháp ĐÚNG LUẬT.",
-  },
-  {
-    scenario: "Housekeeping báo phòng khách có rất nhiều thuốc tây (10+ loại) trên bàn. Khách là phụ nữ trẻ, đi một mình, 2 ngày gần như không ra phòng.",
-    options: [
-      { label: "A", text: "Không can thiệp — đó là quyền riêng tư y tế tuyệt đối của khách", points: 15 },
-      { label: "B", text: "Báo quản lý và đề nghị gọi cảnh sát kiểm tra tình hình ngay", points: 5, trap: true },
-      { label: "C", text: "Nhờ housekeeping âm thầm theo dõi, báo cáo nếu có bất thường nghiêm trọng", points: 20 },
-      { label: "D", text: "Chủ động quan tâm qua dịch vụ: gọi hỏi cần gì, gợi ý room service, mời spa — tạo giao tiếp tự nhiên để đánh giá tình trạng khách", points: 40 },
-    ],
-    explanation: "BẪY \"Phản ứng thái quá\": Gọi cảnh sát (B) khi chưa có bằng chứng = XÂM PHẠM nghiêm trọng. Omotenashi: quan tâm TỰ NHIÊN — nếu khách ổn thì đã phục vụ tốt, nếu không thì đã KỊP THỜI.",
-  },
-  {
-    scenario: "2 khách cùng phàn nàn tiếng ồn. Khách A (Việt, phòng thường) gọi lịch sự. Khách B (ngoại, suite VIP) gọi quát tháo đòi bồi thường. Nguyên nhân: công trình bên ngoài.",
-    options: [
-      { label: "A", text: "Xử lý khách B (VIP) trước vì khách hạng cao cần được ưu tiên", points: 5, trap: true },
-      { label: "B", text: "Xử lý ĐỒNG THỜI cả hai với cùng mức ưu tiên: đổi phòng + xin lỗi + voucher tương đương", points: 40 },
-      { label: "C", text: "Xử lý theo thứ tự ai gọi trước thì được phục vụ trước — công bằng", points: 20 },
-      { label: "D", text: "Xử lý khách B trước vì đang giận hơn, cần xoa dịu kẻo mất kiểm soát", points: 15, trap: true },
-    ],
-    explanation: "BẪY KÉP! Ưu tiên VIP (A) = PHÂN BIỆT đối xử. Ưu tiên ai la to (D) = THƯỞNG cho thái độ xấu. Omotenashi: MỌI KHÁCH đều được tôn trọng NHƯ NHAU.",
-  },
-  {
-    scenario: "Khách check-out, housekeeping phát hiện bộ khăn tắm cao cấp biến mất. Camera cho thấy khách bỏ vào vali. Khách đang ở lobby tươi cười chờ trả phòng.",
-    options: [
-      { label: "A", text: "\"Anh/chị ơi, nhiều khách rất thích bộ khăn tắm mình! Bên em có bán set quà tặng luôn, anh/chị có muốn xem không ạ? 😊\"", points: 40 },
-      { label: "B", text: "Lịch sự yêu cầu kiểm tra hành lý vì housekeeping báo thiếu đồ phòng", points: 15 },
-      { label: "C", text: "Cho qua vì giá trị nhỏ, quan trọng giữ mối quan hệ khách hàng lâu dài", points: 10, trap: true },
-      { label: "D", text: "Tính tiền khăn vào hoá đơn check-out và thông báo lịch sự cho khách", points: 20 },
-    ],
-    explanation: "BẪY \"Bỏ qua = Tử tế\": Cho qua (C) nghe rộng lượng nhưng tạo TIỀN LỆ XẤU. Omotenashi: cho khách cơ hội SỬA SAI mà vẫn GIỮ THỂ DIỆN — đó mới là tôn trọng thật sự.",
-  },
-];
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-5px); }
+            40% { transform: translateX(5px); }
+            60% { transform: translateX(-5px); }
+            80% { transform: translateX(5px); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes scorePulse {
+            0% { transform: scale(1.4); }
+            100% { transform: scale(1); }
+        }
+        @keyframes progressGrow {
+            from { width: 0%; }
+        }
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.3); }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 0 5px rgba(239,68,68,0.3); }
+            50% { box-shadow: 0 0 20px rgba(239,68,68,0.6); }
+        }
 
-const teamInfo = [
-  { name: 'O mê ly', emoji: '🤩' },
-  { name: 'Vui khoẻ có ích', emoji: '💪' },
-  { name: 'Ba xông phaa', emoji: '🔥' },
-  { name: 'Gen G', emoji: '⚡' },
-];
+        .anim-fadeInUp { animation: fadeInUp 0.5s ease-out forwards; }
+        .anim-scaleIn { animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .anim-shake { animation: shake 0.4s ease-in-out 0.3s; }
+        .anim-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
+        .anim-slideInLeft { animation: slideInLeft 0.4s ease-out forwards; }
+        .anim-scorePulse { animation: scorePulse 0.3s ease-out; }
+        .anim-bounceIn { animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .anim-glowPulse { animation: glowPulse 2s infinite; }
 
-const tBgLight = ['bg-pink-50', 'bg-sky-50', 'bg-amber-50', 'bg-emerald-50'];
-const tBgMed = ['bg-pink-100', 'bg-sky-100', 'bg-amber-100', 'bg-emerald-100'];
-const tBgDark = ['bg-pink-500', 'bg-sky-500', 'bg-amber-500', 'bg-emerald-500'];
-const tBorder = ['border-pink-200', 'border-sky-200', 'border-amber-200', 'border-emerald-200'];
-const tBorderDark = ['border-pink-400', 'border-sky-400', 'border-amber-400', 'border-emerald-400'];
-const tText = ['text-pink-600', 'text-sky-600', 'text-amber-600', 'text-emerald-600'];
-const tTextDark = ['text-pink-700', 'text-sky-700', 'text-amber-700', 'text-emerald-700'];
-const tRing = ['ring-pink-300', 'ring-sky-300', 'ring-amber-300', 'ring-emerald-300'];
-const tBar = ['bg-pink-500', 'bg-sky-500', 'bg-amber-500', 'bg-emerald-500'];
-const tHoverBorder = ['hover:border-pink-400', 'hover:border-sky-400', 'hover:border-amber-400', 'hover:border-emerald-400'];
+        .btn-hover { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+        .btn-hover:hover { transform: scale(1.03); }
+        .btn-hover:active { transform: scale(0.97); }
 
-const getPointBadge = (pts) => {
-  if (pts >= 35) return 'bg-emerald-100 text-emerald-700 border-emerald-300';
-  if (pts >= 25) return 'bg-blue-100 text-blue-700 border-blue-300';
-  if (pts >= 15) return 'bg-yellow-100 text-yellow-700 border-yellow-300';
-  return 'bg-red-100 text-red-700 border-red-300';
-};
+        .progress-bar { transition: width 0.8s ease-out; }
 
-const getLevel = (score) => {
-  if (score >= 350) return { title: 'Omotenashi Master', icon: '👑', desc: 'Bậc thầy — nhìn thấu bẫy, phục vụ bằng trái tim!', grad: 'from-yellow-400 to-amber-500' };
-  if (score >= 280) return { title: 'Omotenashi Expert', icon: '⭐', desc: 'Nhạy bén — ít bị lừa, vượt kỳ vọng!', grad: 'from-purple-400 to-indigo-500' };
-  if (score >= 200) return { title: 'Omotenashi Learner', icon: '🌱', desc: 'Đang lớn — nhưng vẫn dính vài bẫy!', grad: 'from-green-400 to-emerald-500' };
-  return { title: 'Omotenashi Beginner', icon: '📘', desc: 'Cần mở mắt — bẫy ở khắp nơi!', grad: 'from-slate-400 to-slate-500' };
-};
+        .option-btn { transition: all 0.2s ease; }
+        .option-btn:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
-const NUM_TEAMS = 4;
-const MAX_PTS = questions.length * 40;
+        .team-pick-btn { transition: all 0.15s ease; }
+        .team-pick-btn:hover { transform: scale(1.05); }
+        .team-pick-btn:active { transform: scale(0.95); }
 
-export default function OmotenashiTrap() {
-  const [screen, setScreen] = useState('start');
-  const [qIdx, setQIdx] = useState(0);
-  const [picks, setPicks] = useState(Array(NUM_TEAMS).fill(null));
-  const [scores, setScores] = useState(Array(NUM_TEAMS).fill(0));
-  const [history, setHistory] = useState([]);
+        .stagger-1 { animation-delay: 0.1s; opacity: 0; }
+        .stagger-2 { animation-delay: 0.2s; opacity: 0; }
+        .stagger-3 { animation-delay: 0.3s; opacity: 0; }
+        .stagger-4 { animation-delay: 0.4s; opacity: 0; }
+        .stagger-5 { animation-delay: 0.5s; opacity: 0; }
+        .stagger-6 { animation-delay: 0.6s; opacity: 0; }
+        .stagger-7 { animation-delay: 0.7s; opacity: 0; }
+        .stagger-8 { animation-delay: 0.8s; opacity: 0; }
 
-  const q = questions[qIdx];
-  const allPicked = picks.every(p => p !== null);
+        .fill-forwards { animation-fill-mode: forwards; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-  const handlePick = (ti, oi) => {
-    if (screen !== 'playing') return;
-    const np = [...picks];
-    np[ti] = np[ti] === oi ? null : oi;
-    setPicks(np);
-  };
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
 
-  const handleConfirm = () => {
-    if (!allPicked) return;
-    const pts = picks.map(p => q.options[p].points);
-    const trapped = picks.map(p => !!q.options[p].trap);
-    setScores(prev => prev.map((s, i) => s + pts[i]));
-    setHistory(prev => [...prev, { picks: [...picks], points: pts, trapped }]);
-    setScreen('revealed');
-  };
+        const questions = [
+            {
+                scenario: "Khách già người Nhật ngồi một mình ở lobby đã 2 tiếng, nhìn ra trời mưa, thỉnh thoảng thở dài. Bạn đi ngang nhiều lần.",
+                options: [
+                    { label: "A", text: "Mang trà ấm ra, ngồi xuống cạnh hỏi thăm, trò chuyện cho khách bớt buồn", points: 15, trap: true },
+                    { label: "B", text: "Lặng lẽ đặt trà ấm và bánh nhỏ bên cạnh, mỉm cười: \"Trời mưa lạnh, mời bác dùng trà ạ\" — cúi đầu rồi lui đi", points: 40 },
+                    { label: "C", text: "Để khách yên, tôn trọng không gian cá nhân, chỉ hỗ trợ khi được yêu cầu", points: 20 },
+                    { label: "D", text: "Hỏi khách có cần gọi taxi hay hỗ trợ đi đâu không", points: 10 },
+                ],
+                explanation: "BẪY \"Tận tâm quá mức\": Ngồi xuống trò chuyện (A) nghe ấm áp nhưng XÂM PHẠM không gian riêng tư — đặc biệt khách Nhật. Omotenashi: CÓ MẶT nhưng KHÔNG ÁP ĐẶT.",
+            },
+            {
+                scenario: "Khách phát hiện gián chết trong phòng tắm, gọi run giọng: \"Tôi dị ứng côn trùng, tôi KHÔNG THỂ ở phòng này!\"",
+                options: [
+                    { label: "A", text: "Xin lỗi, LẬP TỨC đổi phòng đã kiểm tra kỹ, đích thân đưa khách sang, tặng voucher spa, 30 phút sau gọi hỏi thăm", points: 40 },
+                    { label: "B", text: "Xin lỗi, cử người lên dọn sạch phòng và phun khử trùng cho khách yên tâm", points: 5, trap: true },
+                    { label: "C", text: "Xin lỗi, upgrade miễn phí lên suite và tặng bữa tối", points: 30 },
+                    { label: "D", text: "Xin lỗi, đổi phòng ngay và giảm 50% tiền phòng đêm nay", points: 20 },
+                ],
+                explanation: "BẪY \"Xin lỗi là xong\": Dọn phòng + phun thuốc (B) nghe chuyên nghiệp nhưng khách nói KHÔNG THỂ ở — ai muốn ngủ phòng vừa phun hoá chất? Omotenashi: hành động NGAY + theo dõi SAU.",
+            },
+            {
+                scenario: "Khách hỏi thẳng: \"Nói thật đi, resort có gì chơi? Hay chỉ mỗi cái hồ bơi?\" Thực tế resort khá ít hoạt động giải trí so với đối thủ.",
+                options: [
+                    { label: "A", text: "\"Dạ resort có hồ bơi, spa, nhà hàng ạ\" — liệt kê trung thực", points: 10 },
+                    { label: "B", text: "\"Dạ nói thật resort ít hoạt động, nhưng gần đây có khu du lịch X rất vui ạ\"", points: 5, trap: true },
+                    { label: "C", text: "\"Dạ anh/chị muốn trải nghiệm gì ạ? Để em tư vấn phù hợp\"", points: 25 },
+                    { label: "D", text: "\"Resort mình tập trung trải nghiệm NGHỈ NGƠI đích thực — nhưng em có bản đồ bí mật 5 điểm local mà du khách ít biết, muốn thử không?\"", points: 40 },
+                ],
+                explanation: "BẪY \"Thật thà quá lố\": Thừa nhận yếu kém rồi giới thiệu nơi khác (B) = HẠI THƯƠNG HIỆU. Omotenashi: biến điểm yếu thành CÂU CHUYỆN hấp dẫn!",
+            },
+            {
+                scenario: "Đồng nghiệp mới run rẩy phục vụ bàn VIP lần đầu. Bạn thấy đồng nghiệp suýt đổ nước vào người khách. Khách chưa nhận ra.",
+                options: [
+                    { label: "A", text: "Bước đến đỡ khay ngay, phục vụ bàn VIP thay đồng nghiệp cho an toàn", points: 15, trap: true },
+                    { label: "B", text: "Bước đến tự nhiên kiểu cùng phục vụ bàn VIP, đứng cạnh hỗ trợ nhẹ nhàng để đồng nghiệp vẫn là người chính", points: 40 },
+                    { label: "C", text: "Để đồng nghiệp tự xử lý — sai lầm là cách học tốt nhất", points: 5 },
+                    { label: "D", text: "Ra hiệu cho đồng nghiệp vào trong, hướng dẫn nhanh kỹ thuật rồi cho quay ra tiếp", points: 25 },
+                ],
+                explanation: "BẪY \"Giúp = Giành\": Nhảy vào làm thay (A) = đồng nghiệp MẤT MẶT trước VIP. Omotenashi: nâng đỡ CẢ khách LẪN đồng nghiệp cùng lúc.",
+            },
+            {
+                scenario: "Khách la lối ở bar, xúc phạm bartender: \"Mày pha cái gì? Đồ vô dụng!\" Bartender sắp khóc. Cocktail đúng recipe nhưng không hợp khẩu vị khách.",
+                options: [
+                    { label: "A", text: "Xin lỗi khách, pha lại theo ý khách ngay, an ủi bartender sau ca", points: 20 },
+                    { label: "B", text: "Mời khách vào khu riêng, lịch sự giải thích cocktail đúng recipe quốc tế chuẩn", points: 5, trap: true },
+                    { label: "C", text: "Bình tĩnh: \"Dạ em pha lại đúng ý anh/chị ngay, thích vị thế nào ạ?\" — tự nhiên đứng chắn cho bartender rút lui lấy lại bình tĩnh", points: 40 },
+                    { label: "D", text: "Gọi quản lý ra xử lý vì tình huống vượt thẩm quyền", points: 15 },
+                ],
+                explanation: "BẪY \"Giải thích = Sửa khách\": Dù recipe đúng (B), giải thích = nói \"anh/chị SAI\". Omotenashi: giải quyết cảm xúc khách + BẢO VỆ đồng nghiệp cùng lúc.",
+            },
+            {
+                scenario: "Qua booking bạn thấy hôm nay sinh nhật khách phòng 302. Khách đi MỘT MÌNH, dáng vẻ trầm lặng, suốt ngày ở trong phòng, không đề cập sinh nhật.",
+                options: [
+                    { label: "A", text: "Lặng lẽ để trong phòng bông hoa nhỏ + thiệp viết tay: \"Chúc ngày hôm nay thật đặc biệt ✿\" — KHÔNG nhắc từ \"sinh nhật\"", points: 40 },
+                    { label: "B", text: "Trang trí phòng + bánh kem + cả team hát Happy Birthday khi khách mở cửa — bất ngờ tuyệt vời!", points: 5, trap: true },
+                    { label: "C", text: "Không làm gì cả — nếu khách muốn kỷ niệm thì đã nói rồi", points: 20 },
+                    { label: "D", text: "Gọi điện hỏi: \"Em biết hôm nay ngày đặc biệt, anh/chị muốn KS tổ chức gì không?\"", points: 15 },
+                ],
+                explanation: "BẪY \"Surprise = Vui\": Tổ chức hoành tráng (B) nhưng khách đi MỘT MÌNH + trầm lặng — sinh nhật có thể gắn với MẤT MÁT. Omotenashi: sưởi ấm mà KHÔNG chạm vào vết thương.",
+            },
+            {
+                scenario: "23h, gia đình 4 người (2 trẻ nhỏ mệt mỏi) đến không có booking — KS khác huỷ phút chót. Chỉ còn 1 suite giá rất cao, vượt xa ngân sách.",
+                options: [
+                    { label: "A", text: "Báo giá đúng quy định, nếu không phù hợp thì giới thiệu KS gần đó", points: 15 },
+                    { label: "B", text: "Thương gia đình nên tự quyết cho ở suite với giá phòng thường luôn", points: 10, trap: true },
+                    { label: "C", text: "Mời ngồi nghỉ, trà nước + khăn ấm cho trẻ, GỌI quản lý xin áp giá đặc biệt — đúng quy trình mà vẫn có tình", points: 40 },
+                    { label: "D", text: "Gọi điện giúp gia đình tìm KS khác còn phòng phù hợp ngân sách", points: 25 },
+                ],
+                explanation: "BẪY \"Tốt bụng = Tự quyết\": Tự ý giảm giá (B) rất đẹp nhưng VI PHẠM thẩm quyền — có thể bị sa thải. Omotenashi thông minh: chăm sóc ngay + giải pháp ĐÚNG LUẬT.",
+            },
+            {
+                scenario: "Housekeeping báo phòng khách có rất nhiều thuốc tây (10+ loại) trên bàn. Khách là phụ nữ trẻ, đi một mình, 2 ngày gần như không ra phòng.",
+                options: [
+                    { label: "A", text: "Không can thiệp — đó là quyền riêng tư y tế tuyệt đối của khách", points: 15 },
+                    { label: "B", text: "Báo quản lý và đề nghị gọi cảnh sát kiểm tra tình hình ngay", points: 5, trap: true },
+                    { label: "C", text: "Nhờ housekeeping âm thầm theo dõi, báo cáo nếu có bất thường nghiêm trọng", points: 20 },
+                    { label: "D", text: "Chủ động quan tâm qua dịch vụ: gọi hỏi cần gì, gợi ý room service, mời spa — tạo giao tiếp tự nhiên để đánh giá tình trạng khách", points: 40 },
+                ],
+                explanation: "BẪY \"Phản ứng thái quá\": Gọi cảnh sát (B) khi chưa có bằng chứng = XÂM PHẠM nghiêm trọng. Omotenashi: quan tâm TỰ NHIÊN — nếu khách ổn thì đã phục vụ tốt, nếu không thì đã KỊP THỜI.",
+            },
+            {
+                scenario: "2 khách cùng phàn nàn tiếng ồn. Khách A (Việt, phòng thường) gọi lịch sự. Khách B (ngoại, suite VIP) gọi quát tháo đòi bồi thường. Nguyên nhân: công trình bên ngoài.",
+                options: [
+                    { label: "A", text: "Xử lý khách B (VIP) trước vì khách hạng cao cần được ưu tiên", points: 5, trap: true },
+                    { label: "B", text: "Xử lý ĐỒNG THỜI cả hai với cùng mức ưu tiên: đổi phòng + xin lỗi + voucher tương đương", points: 40 },
+                    { label: "C", text: "Xử lý theo thứ tự ai gọi trước thì được phục vụ trước — công bằng", points: 20 },
+                    { label: "D", text: "Xử lý khách B trước vì đang giận hơn, cần xoa dịu kẻo mất kiểm soát", points: 15, trap: true },
+                ],
+                explanation: "BẪY KÉP! Ưu tiên VIP (A) = PHÂN BIỆT đối xử. Ưu tiên ai la to (D) = THƯỞNG cho thái độ xấu. Omotenashi: MỌI KHÁCH đều được tôn trọng NHƯ NHAU.",
+            },
+            {
+                scenario: "Khách check-out, housekeeping phát hiện bộ khăn tắm cao cấp biến mất. Camera cho thấy khách bỏ vào vali. Khách đang ở lobby tươi cười chờ trả phòng.",
+                options: [
+                    { label: "A", text: "\"Anh/chị ơi, nhiều khách rất thích bộ khăn tắm mình! Bên em có bán set quà tặng luôn, anh/chị có muốn xem không ạ? 😊\"", points: 40 },
+                    { label: "B", text: "Lịch sự yêu cầu kiểm tra hành lý vì housekeeping báo thiếu đồ phòng", points: 15 },
+                    { label: "C", text: "Cho qua vì giá trị nhỏ, quan trọng giữ mối quan hệ khách hàng lâu dài", points: 10, trap: true },
+                    { label: "D", text: "Tính tiền khăn vào hoá đơn check-out và thông báo lịch sự cho khách", points: 20 },
+                ],
+                explanation: "BẪY \"Bỏ qua = Tử tế\": Cho qua (C) nghe rộng lượng nhưng tạo TIỀN LỆ XẤU. Omotenashi: cho khách cơ hội SỬA SAI mà vẫn GIỮ THỂ DIỆN — đó mới là tôn trọng thật sự.",
+            },
+        ];
 
-  const handleNext = () => {
-    if (qIdx < questions.length - 1) {
-      setQIdx(qIdx + 1);
-      setPicks(Array(NUM_TEAMS).fill(null));
-      setScreen('playing');
-    } else {
-      setScreen('final');
-    }
-  };
+        const teamInfo = [
+            { name: 'O mê ly', emoji: '🤩' },
+            { name: 'Vui khoẻ có ích', emoji: '💪' },
+            { name: 'Ba xông phaa', emoji: '🔥' },
+            { name: 'Gen G', emoji: '⚡' },
+        ];
 
-  const handleRestart = () => {
-    setScreen('start');
-    setQIdx(0);
-    setPicks(Array(NUM_TEAMS).fill(null));
-    setScores(Array(NUM_TEAMS).fill(0));
-    setHistory([]);
-  };
+        const tBgLight = ['bg-pink-50', 'bg-sky-50', 'bg-amber-50', 'bg-emerald-50'];
+        const tBgDark = ['bg-pink-500', 'bg-sky-500', 'bg-amber-500', 'bg-emerald-500'];
+        const tBorder = ['border-pink-200', 'border-sky-200', 'border-amber-200', 'border-emerald-200'];
+        const tBorderDark = ['border-pink-400', 'border-sky-400', 'border-amber-400', 'border-emerald-400'];
+        const tText = ['text-pink-600', 'text-sky-600', 'text-amber-600', 'text-emerald-600'];
+        const tTextDark = ['text-pink-700', 'text-sky-700', 'text-amber-700', 'text-emerald-700'];
+        const tRing = ['ring-pink-300', 'ring-sky-300', 'ring-amber-300', 'ring-emerald-300'];
+        const tBar = ['bg-pink-500', 'bg-sky-500', 'bg-amber-500', 'bg-emerald-500'];
 
-  if (screen === 'start') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-950 to-slate-900 flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="max-w-lg w-full text-center">
-          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.2 }} className="text-6xl mb-3">🎌</motion.div>
-          <h1 className="text-3xl font-black text-white mb-1">OMOTENASHI</h1>
-          <h2 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-yellow-400 to-red-400 mb-6">TRAP CHALLENGE</h2>
+        const NUM_TEAMS = 4;
+        const MAX_PTS = questions.length * 40;
 
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            {teamInfo.map((t, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.1 }}
-                className={`rounded-xl p-4 border ${tBorder[i]} ${tBgLight[i]}`}>
-                <div className="text-3xl mb-1">{t.emoji}</div>
-                <div className={`font-bold text-sm ${tTextDark[i]}`}>{t.name}</div>
-              </motion.div>
-            ))}
-          </div>
+        const getPointBadge = (pts) => {
+            if (pts >= 35) return 'bg-emerald-100 text-emerald-700 border-emerald-300';
+            if (pts >= 25) return 'bg-blue-100 text-blue-700 border-blue-300';
+            if (pts >= 15) return 'bg-yellow-100 text-yellow-700 border-yellow-300';
+            return 'bg-red-100 text-red-700 border-red-300';
+        };
 
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
-            className="bg-red-950 bg-opacity-50 border border-red-800 rounded-xl p-4 mb-6 text-left space-y-3">
-            <p className="text-slate-300 text-sm leading-relaxed">
-              <span className="text-white font-bold">🎯 10 tình huống</span> · 4 đội · Mỗi câu có <span className="text-red-400 font-bold">BẪY ẨN</span> — đáp án nghe "hoàn hảo" nhưng thực ra SAI!
-            </p>
-            <p className="text-red-400 text-xs leading-relaxed font-medium">
-              💀 Cảnh báo: Đáp án "tận tâm nhất", "thật thà nhất", "hào phóng nhất" chưa chắc đã tốt nhất. Omotenashi đòi hỏi sự TINH TẾ — biết khi nào KHÔNG nên làm còn quan trọng hơn biết nên làm gì.
-            </p>
-          </motion.div>
+        const getLevel = (score) => {
+            if (score >= 350) return { title: 'Omotenashi Master', icon: '👑', desc: 'Bậc thầy — nhìn thấu bẫy, phục vụ bằng trái tim!' };
+            if (score >= 280) return { title: 'Omotenashi Expert', icon: '⭐', desc: 'Nhạy bén — ít bị lừa, vượt kỳ vọng!' };
+            if (score >= 200) return { title: 'Omotenashi Learner', icon: '🌱', desc: 'Đang lớn — nhưng vẫn dính vài bẫy!' };
+            return { title: 'Omotenashi Beginner', icon: '📘', desc: 'Cần mở mắt — bẫy ở khắp nơi!' };
+        };
 
-          <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => setScreen('playing')}
-            className="px-10 py-4 bg-gradient-to-r from-red-500 via-amber-500 to-red-500 text-white font-bold text-lg rounded-2xl shadow-lg shadow-red-500/30">
-            ⚡ Bắt đầu thử thách
-          </motion.button>
-        </motion.div>
-      </div>
-    );
-  }
+        function OmotenashiTrap() {
+            const [screen, setScreen] = useState('start');
+            const [qIdx, setQIdx] = useState(0);
+            const [picks, setPicks] = useState(Array(NUM_TEAMS).fill(null));
+            const [scores, setScores] = useState(Array(NUM_TEAMS).fill(0));
+            const [history, setHistory] = useState([]);
+            const [animKey, setAnimKey] = useState(0);
 
-  if (screen === 'final') {
-    const ranked = Array.from({ length: NUM_TEAMS }, (_, i) => i).sort((a, b) => scores[b] - scores[a]);
-    const medals = ['🥇', '🥈', '🥉', '4️⃣'];
-    const trapsHit = Array(NUM_TEAMS).fill(0);
-    history.forEach(h => h.trapped.forEach((t, i) => { if (t) trapsHit[i]++; }));
+            const q = questions[qIdx];
+            const allPicked = picks.every(p => p !== null);
 
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-950 to-slate-900 flex items-center justify-center p-3">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-xl w-full">
-          <div className="text-center mb-5">
-            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.3 }} className="text-5xl mb-2">🏆</motion.div>
-            <h2 className="text-2xl font-black text-white mb-1">KẾT QUẢ CHUNG CUỘC</h2>
-            <p className="text-slate-400 text-xs">Tổng điểm tối đa: {MAX_PTS} · 10 câu hỏi có bẫy</p>
-          </div>
+            const handlePick = (ti, oi) => {
+                if (screen !== 'playing') return;
+                const np = [...picks];
+                np[ti] = np[ti] === oi ? null : oi;
+                setPicks(np);
+            };
 
-          <div className="space-y-2 mb-5">
-            {ranked.map((ti, rank) => {
-              const level = getLevel(scores[ti]);
-              const isWinner = rank === 0;
-              return (
-                <motion.div key={ti} initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + rank * 0.15 }}
-                  className={`rounded-xl p-3 border-2 ${isWinner ? 'border-yellow-400 bg-gradient-to-r from-yellow-950 to-amber-950' : 'border-slate-700 bg-slate-800'}`}>
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">{medals[rank]}</span>
-                    <span className="text-xl">{teamInfo[ti].emoji}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1">
-                        <span className="text-white font-bold text-sm">{teamInfo[ti].name}</span>
-                        {isWinner && <Crown className="w-4 h-4 text-yellow-400" />}
-                      </div>
-                      <div className={`text-xs font-medium bg-gradient-to-r ${level.grad} bg-clip-text text-transparent`}>{level.icon} {level.title}</div>
-                      <div className="text-slate-500 text-xs">{level.desc}</div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="text-2xl font-black text-white">{scores[ti]}</div>
-                      <div className="text-red-400 text-xs font-bold">💀 {trapsHit[ti]} bẫy</div>
-                    </div>
-                  </div>
-                  <div className="mt-2 w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${(scores[ti] / MAX_PTS) * 100}%` }} transition={{ delay: 0.8 + rank * 0.15, duration: 0.8 }}
-                      className={`h-full rounded-full ${tBar[ti]}`} />
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+            const handleConfirm = () => {
+                if (!allPicked) return;
+                const pts = picks.map(p => q.options[p].points);
+                const trapped = picks.map(p => !!q.options[p].trap);
+                setScores(prev => prev.map((s, i) => s + pts[i]));
+                setHistory(prev => [...prev, { picks: [...picks], points: pts, trapped }]);
+                setScreen('revealed');
+                setAnimKey(k => k + 1);
+            };
 
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }} className="bg-slate-800 rounded-xl p-3 mb-5 overflow-x-auto">
-            <h4 className="text-white font-bold text-xs mb-2">📊 Chi tiết từng câu</h4>
-            <div className="space-y-1 text-xs">
-              <div className="grid gap-1" style={{ gridTemplateColumns: '2rem repeat(4, 1fr)' }}>
-                <span className="text-slate-600">#</span>
-                {teamInfo.map((t, i) => <span key={i} className="text-center text-slate-500 font-bold truncate">{t.emoji}</span>)}
-              </div>
-              {history.map((h, hi) => (
-                <div key={hi} className="grid gap-1" style={{ gridTemplateColumns: '2rem repeat(4, 1fr)' }}>
-                  <span className="text-slate-500">{hi + 1}</span>
-                  {h.points.map((p, pi) => (
-                    <span key={pi} className={`text-center font-bold ${h.trapped[pi] ? 'text-red-400' : p >= 35 ? 'text-emerald-400' : p >= 25 ? 'text-blue-400' : 'text-yellow-400'}`}>
-                      {h.trapped[pi] ? '💀' : ''}{p}
-                    </span>
-                  ))}
-                </div>
-              ))}
-              <div className="grid gap-1 border-t border-slate-700 pt-1 mt-1" style={{ gridTemplateColumns: '2rem repeat(4, 1fr)' }}>
-                <span className="text-white font-black">Σ</span>
-                {scores.map((s, i) => <span key={i} className={`text-center font-black ${tText[i]}`}>{s}</span>)}
-              </div>
-            </div>
-          </motion.div>
+            const handleNext = () => {
+                if (qIdx < questions.length - 1) {
+                    setQIdx(qIdx + 1);
+                    setPicks(Array(NUM_TEAMS).fill(null));
+                    setScreen('playing');
+                    setAnimKey(k => k + 1);
+                } else {
+                    setScreen('final');
+                    setAnimKey(k => k + 1);
+                }
+            };
 
-          <div className="text-center">
-            <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={handleRestart}
-              className="px-8 py-3 bg-slate-700 text-white font-bold rounded-xl flex items-center gap-2 mx-auto hover:bg-slate-600">
-              <RotateCcw className="w-4 h-4" /> Chơi lại
-            </motion.button>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
+            const handleRestart = () => {
+                setScreen('start');
+                setQIdx(0);
+                setPicks(Array(NUM_TEAMS).fill(null));
+                setScores(Array(NUM_TEAMS).fill(0));
+                setHistory([]);
+                setAnimKey(k => k + 1);
+            };
 
-  const isRevealed = screen === 'revealed';
-  const curHist = isRevealed ? history[history.length - 1] : null;
-  const bestIdx = q.options.reduce((b, o, i) => o.points > q.options[b].points ? i : b, 0);
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-2 sm:p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Score bar */}
-        <div className="grid grid-cols-4 gap-1.5 mb-2">
-          {teamInfo.map((t, i) => (
-            <div key={i} className={`${tBgLight[i]} rounded-lg p-1.5 border ${tBorder[i]} text-center`}>
-              <div className="text-xs font-bold truncate">{t.emoji} {t.name}</div>
-              <motion.div key={scores[i]} initial={{ scale: 1.3 }} animate={{ scale: 1 }} className={`text-lg font-black ${tTextDark[i]}`}>{scores[i]}</motion.div>
-            </div>
-          ))}
-        </div>
-
-        {/* Progress */}
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs font-bold text-slate-500">Q{qIdx + 1}/{questions.length}</span>
-          <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-            <motion.div className="h-full bg-gradient-to-r from-red-500 to-amber-500 rounded-full"
-              animate={{ width: `${((qIdx + (isRevealed ? 1 : 0)) / questions.length) * 100}%` }} />
-          </div>
-          <span className="text-xs text-red-500 font-bold">⚠️ BẪY</span>
-        </div>
-
-        <AnimatePresence mode="wait">
-          <motion.div key={`${qIdx}-${screen}`} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
-            {/* Question */}
-            <div className="bg-white rounded-xl border border-slate-200 p-3 mb-2 shadow-sm">
-              <div className="flex items-start gap-2">
-                <span className="bg-gradient-to-br from-red-500 to-amber-500 text-white font-black text-sm w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0">{qIdx + 1}</span>
-                <p className="text-slate-800 font-medium leading-relaxed text-sm">{q.scenario}</p>
-              </div>
-            </div>
-
-            {/* Options */}
-            <div className="space-y-1.5 mb-3">
-              {q.options.map((opt, oi) => {
-                const isBest = isRevealed && oi === bestIdx;
-                const isTrap = isRevealed && opt.trap;
-                const pickedBy = isRevealed ? Array.from({ length: NUM_TEAMS }, (_, i) => i).filter(t => curHist.picks[t] === oi) : [];
+            // ============ START SCREEN ============
+            if (screen === 'start') {
                 return (
-                  <motion.div key={oi}
-                    animate={isTrap ? { x: [0, -4, 4, -4, 4, 0] } : {}}
-                    transition={isTrap ? { delay: 0.3, duration: 0.4 } : {}}
-                    className={`flex items-start gap-2 p-2.5 rounded-xl border text-sm transition-all ${
-                      isRevealed
-                        ? isBest ? 'bg-emerald-50 border-emerald-300 shadow-sm'
-                        : isTrap ? 'bg-red-50 border-red-300'
-                        : 'bg-white border-slate-200'
-                        : 'bg-white border-slate-200'
-                    }`}>
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5 ${
-                      isBest ? 'bg-emerald-500 text-white' : isTrap ? 'bg-red-500 text-white' : 'bg-slate-100 text-slate-500'
-                    }`}>
-                      {isBest ? '★' : isTrap ? '!' : opt.label}
-                    </span>
-                    <span className={`flex-1 leading-relaxed ${isTrap ? 'text-red-700' : 'text-slate-700'}`}>{opt.text}</span>
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      {isRevealed && isTrap && (
-                        <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.2 }}
-                          className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white whitespace-nowrap">💀 BẪY</motion.span>
-                      )}
-                      {isRevealed && (
-                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full border ${getPointBadge(opt.points)}`}>+{opt.points}</span>
-                      )}
-                      {isRevealed && pickedBy.length > 0 && (
-                        <div className="flex gap-0.5">{pickedBy.map(t => <span key={t} className="text-sm">{teamInfo[t].emoji}</span>)}</div>
-                      )}
+                    <div key={'start-' + animKey} className="min-h-screen bg-gradient-to-br from-slate-900 via-red-950 to-slate-900 flex items-center justify-center p-4">
+                        <div className="max-w-lg w-full text-center anim-fadeInUp">
+                            <div className="text-6xl mb-3 anim-scaleIn stagger-2 fill-forwards">🎌</div>
+                            <h1 className="text-3xl font-black text-white mb-1">OMOTENASHI</h1>
+                            <h2 className="text-lg font-bold mb-6" style={{background: 'linear-gradient(to right, #f87171, #facc15, #f87171)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'}}>
+                                TRAP CHALLENGE
+                            </h2>
+
+                            <div className="grid grid-cols-2 gap-3 mb-6">
+                                {teamInfo.map((t, i) => (
+                                    <div key={i} className={`rounded-xl p-4 border ${tBorder[i]} ${tBgLight[i]} anim-fadeInUp fill-forwards`}
+                                         style={{animationDelay: (0.3 + i * 0.1) + 's', opacity: 0}}>
+                                        <div className="text-3xl mb-1">{t.emoji}</div>
+                                        <div className={`font-bold text-sm ${tTextDark[i]}`}>{t.name}</div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="anim-fadeIn fill-forwards stagger-7 rounded-xl p-4 mb-6 text-left space-y-3"
+                                 style={{background: 'rgba(69, 10, 10, 0.5)', border: '1px solid rgba(153, 27, 27, 0.5)'}}>
+                                <p className="text-slate-300 text-sm leading-relaxed">
+                                    <span className="text-white font-bold">🎯 10 tình huống</span> · 4 đội · Mỗi câu có <span className="text-red-400 font-bold">BẪY ẨN</span> — đáp án nghe "hoàn hảo" nhưng thực ra SAI!
+                                </p>
+                                <p className="text-red-400 text-xs leading-relaxed font-medium">
+                                    💀 Cảnh báo: Đáp án "tận tâm nhất", "thật thà nhất", "hào phóng nhất" chưa chắc đã tốt nhất. Omotenashi đòi hỏi sự TINH TẾ — biết khi nào KHÔNG nên làm còn quan trọng hơn biết nên làm gì.
+                                </p>
+                            </div>
+
+                            <button onClick={() => { setScreen('playing'); setAnimKey(k => k + 1); }}
+                                className="px-10 py-4 bg-gradient-to-r from-red-500 via-amber-500 to-red-500 text-white font-bold text-lg rounded-2xl shadow-lg btn-hover anim-glowPulse">
+                                ⚡ Bắt đầu thử thách
+                            </button>
+                        </div>
                     </div>
-                  </motion.div>
                 );
-              })}
-            </div>
+            }
 
-            {/* Explanation (revealed only) */}
-            {isRevealed && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} transition={{ delay: 0.5 }}
-                className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-amber-800 text-sm leading-relaxed font-medium">{q.explanation}</p>
-                </div>
-              </motion.div>
-            )}
+            // ============ FINAL SCREEN ============
+            if (screen === 'final') {
+                const ranked = Array.from({ length: NUM_TEAMS }, (_, i) => i).sort((a, b) => scores[b] - scores[a]);
+                const medals = ['🥇', '🥈', '🥉', '4️⃣'];
+                const trapsHit = Array(NUM_TEAMS).fill(0);
+                history.forEach(h => h.trapped.forEach((t, i) => { if (t) trapsHit[i]++; }));
 
-            {!isRevealed ? (
-              <>
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">✋ Chọn đáp án:</div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                  {teamInfo.map((t, ti) => (
-                    <div key={ti} className={`${tBgLight[ti]} rounded-xl border ${tBorder[ti]} p-2.5`}>
-                      <div className={`text-xs font-bold ${tTextDark[ti]} mb-1.5 text-center truncate`}>{t.emoji} {t.name}</div>
-                      <div className="grid grid-cols-4 gap-1.5">
-                        {q.options.map((opt, oi) => (
-                          <button key={oi} onClick={() => handlePick(ti, oi)}
-                            className={`h-10 rounded-lg font-bold text-xs transition-all ${
-                              picks[ti] === oi
-                                ? `${tBgDark[ti]} text-white ring-4 ${tRing[ti]} shadow-md`
-                                : `bg-white border ${tBorder[ti]} ${tText[ti]} ${tHoverBorder[ti]}`
-                            }`}>
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
-                      {picks[ti] !== null && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-1 text-xs text-slate-400 text-center">
-                          <Check className="w-3 h-3 inline mr-0.5" />Chọn {q.options[picks[ti]].label}
-                        </motion.div>
-                      )}
+                const gradColors = {
+                    'Omotenashi Master': 'from-yellow-400 to-amber-500',
+                    'Omotenashi Expert': 'from-purple-400 to-indigo-500',
+                    'Omotenashi Learner': 'from-green-400 to-emerald-500',
+                    'Omotenashi Beginner': 'from-slate-400 to-slate-500',
+                };
+
+                return (
+                    <div key={'final-' + animKey} className="min-h-screen bg-gradient-to-br from-slate-900 via-red-950 to-slate-900 flex items-center justify-center p-3">
+                        <div className="max-w-xl w-full">
+                            <div className="text-center mb-5">
+                                <div className="text-5xl mb-2 anim-scaleIn stagger-3 fill-forwards">🏆</div>
+                                <h2 className="text-2xl font-black text-white mb-1 anim-fadeInUp">KẾT QUẢ CHUNG CUỘC</h2>
+                                <p className="text-slate-400 text-xs anim-fadeIn stagger-4 fill-forwards">Tổng điểm tối đa: {MAX_PTS} · 10 câu hỏi có bẫy</p>
+                            </div>
+
+                            <div className="space-y-2 mb-5">
+                                {ranked.map((ti, rank) => {
+                                    const level = getLevel(scores[ti]);
+                                    const isWinner = rank === 0;
+                                    const grad = gradColors[level.title] || 'from-slate-400 to-slate-500';
+                                    return (
+                                        <div key={ti}
+                                             className={`rounded-xl p-3 anim-slideInLeft fill-forwards ${isWinner ? 'border-2 border-yellow-400' : 'border-2 border-slate-700 bg-slate-800'}`}
+                                             style={{
+                                                 animationDelay: (0.5 + rank * 0.15) + 's', opacity: 0,
+                                                 background: isWinner ? 'linear-gradient(to right, rgba(69, 26, 3, 0.8), rgba(120, 53, 15, 0.8))' : undefined
+                                             }}>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-2xl">{medals[rank]}</span>
+                                                <span className="text-xl">{teamInfo[ti].emoji}</span>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-white font-bold text-sm">{teamInfo[ti].name}</span>
+                                                        {isWinner && <span>👑</span>}
+                                                    </div>
+                                                    <div className={`text-xs font-medium bg-gradient-to-r ${grad} bg-clip-text`} style={{WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'}}>
+                                                        {level.icon} {level.title}
+                                                    </div>
+                                                    <div className="text-slate-500 text-xs">{level.desc}</div>
+                                                </div>
+                                                <div className="text-right flex-shrink-0">
+                                                    <div className="text-2xl font-black text-white">{scores[ti]}</div>
+                                                    <div className="text-red-400 text-xs font-bold">💀 {trapsHit[ti]} bẫy</div>
+                                                </div>
+                                            </div>
+                                            <div className="mt-2 w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                                                <div className={`h-full rounded-full progress-bar ${tBar[ti]}`}
+                                                     style={{width: `${(scores[ti] / MAX_PTS) * 100}%`, transitionDelay: (0.8 + rank * 0.15) + 's'}} />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="bg-slate-800 rounded-xl p-3 mb-5 overflow-x-auto anim-fadeIn fill-forwards" style={{animationDelay: '1.4s', opacity: 0}}>
+                                <h4 className="text-white font-bold text-xs mb-2">📊 Chi tiết từng câu</h4>
+                                <div className="space-y-1 text-xs">
+                                    <div className="grid gap-1" style={{gridTemplateColumns: '2rem repeat(4, 1fr)'}}>
+                                        <span className="text-slate-600">#</span>
+                                        {teamInfo.map((t, i) => <span key={i} className="text-center text-slate-500 font-bold truncate">{t.emoji}</span>)}
+                                    </div>
+                                    {history.map((h, hi) => (
+                                        <div key={hi} className="grid gap-1" style={{gridTemplateColumns: '2rem repeat(4, 1fr)'}}>
+                                            <span className="text-slate-500">{hi + 1}</span>
+                                            {h.points.map((p, pi) => (
+                                                <span key={pi} className={`text-center font-bold ${h.trapped[pi] ? 'text-red-400' : p >= 35 ? 'text-emerald-400' : p >= 25 ? 'text-blue-400' : 'text-yellow-400'}`}>
+                                                    {h.trapped[pi] ? '💀' : ''}{p}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    ))}
+                                    <div className="grid gap-1 border-t border-slate-700 pt-1 mt-1" style={{gridTemplateColumns: '2rem repeat(4, 1fr)'}}>
+                                        <span className="text-white font-black">Σ</span>
+                                        {scores.map((s, i) => <span key={i} className={`text-center font-black ${tText[i]}`}>{s}</span>)}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="text-center">
+                                <button onClick={handleRestart}
+                                    className="px-8 py-3 bg-slate-700 text-white font-bold rounded-xl flex items-center gap-2 mx-auto hover:bg-slate-600 btn-hover">
+                                    🔄 Chơi lại
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                  ))}
+                );
+            }
+
+            // ============ PLAYING / REVEALED SCREEN ============
+            const isRevealed = screen === 'revealed';
+            const curHist = isRevealed ? history[history.length - 1] : null;
+            const bestIdx = q.options.reduce((b, o, i) => o.points > q.options[b].points ? i : b, 0);
+
+            return (
+                <div key={'play-' + animKey} className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-2 sm:p-4">
+                    <div className="max-w-4xl mx-auto">
+                        {/* Score bar */}
+                        <div className="grid grid-cols-4 gap-1.5 mb-2">
+                            {teamInfo.map((t, i) => (
+                                <div key={i} className={`${tBgLight[i]} rounded-lg p-1.5 border ${tBorder[i]} text-center`}>
+                                    <div className="text-xs font-bold truncate">{t.emoji} {t.name}</div>
+                                    <div key={scores[i]} className={`text-lg font-black ${tTextDark[i]} anim-scorePulse`}>{scores[i]}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Progress */}
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="text-xs font-bold text-slate-500">Q{qIdx + 1}/{questions.length}</span>
+                            <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-red-500 to-amber-500 rounded-full progress-bar"
+                                     style={{width: `${((qIdx + (isRevealed ? 1 : 0)) / questions.length) * 100}%`}} />
+                            </div>
+                            <span className="text-xs text-red-500 font-bold">⚠️ BẪY</span>
+                        </div>
+
+                        <div className="anim-fadeInUp">
+                            {/* Question */}
+                            <div className="bg-white rounded-xl border border-slate-200 p-3 mb-2 shadow-sm">
+                                <div className="flex items-start gap-2">
+                                    <span className="bg-gradient-to-br from-red-500 to-amber-500 text-white font-black text-sm flex items-center justify-center flex-shrink-0"
+                                          style={{width: '28px', height: '28px', borderRadius: '8px'}}>{qIdx + 1}</span>
+                                    <p className="text-slate-800 font-medium leading-relaxed text-sm">{q.scenario}</p>
+                                </div>
+                            </div>
+
+                            {/* Options */}
+                            <div className="space-y-1.5 mb-3">
+                                {q.options.map((opt, oi) => {
+                                    const isBest = isRevealed && oi === bestIdx;
+                                    const isTrap = isRevealed && opt.trap;
+                                    const pickedBy = isRevealed ? Array.from({ length: NUM_TEAMS }, (_, i) => i).filter(t => curHist.picks[t] === oi) : [];
+                                    return (
+                                        <div key={oi}
+                                            className={`flex items-start gap-2 p-2.5 rounded-xl border text-sm transition-all ${
+                                                isTrap ? 'anim-shake' : ''
+                                            } ${
+                                                isRevealed
+                                                    ? isBest ? 'bg-emerald-50 border-emerald-300 shadow-sm'
+                                                    : isTrap ? 'bg-red-50 border-red-300'
+                                                    : 'bg-white border-slate-200'
+                                                    : 'bg-white border-slate-200'
+                                            }`}>
+                                            <span className={`flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5 ${
+                                                isBest ? 'bg-emerald-500 text-white' : isTrap ? 'bg-red-500 text-white' : 'bg-slate-100 text-slate-500'
+                                            }`} style={{width: '24px', height: '24px', borderRadius: '50%'}}>
+                                                {isBest ? '★' : isTrap ? '!' : opt.label}
+                                            </span>
+                                            <span className={`flex-1 leading-relaxed ${isTrap ? 'text-red-700' : 'text-slate-700'}`}>{opt.text}</span>
+                                            <div className="flex items-center gap-1 flex-shrink-0">
+                                                {isRevealed && isTrap && (
+                                                    <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white whitespace-nowrap anim-bounceIn fill-forwards"
+                                                          style={{animationDelay: '0.2s', opacity: 0}}>💀 BẪY</span>
+                                                )}
+                                                {isRevealed && (
+                                                    <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full border ${getPointBadge(opt.points)}`}>+{opt.points}</span>
+                                                )}
+                                                {isRevealed && pickedBy.length > 0 && (
+                                                    <div className="flex gap-0.5">{pickedBy.map(t => <span key={t} className="text-sm">{teamInfo[t].emoji}</span>)}</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Explanation (revealed only) */}
+                            {isRevealed && (
+                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3 anim-fadeIn fill-forwards" style={{animationDelay: '0.5s', opacity: 0}}>
+                                    <div className="flex items-start gap-2">
+                                        <span className="text-xl flex-shrink-0">⚠️</span>
+                                        <p className="text-amber-800 text-sm leading-relaxed font-medium">{q.explanation}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {!isRevealed ? (
+                                <>
+                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">✋ Chọn đáp án:</div>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                                        {teamInfo.map((t, ti) => (
+                                            <div key={ti} className={`${tBgLight[ti]} rounded-xl border ${tBorder[ti]} p-2.5`}>
+                                                <div className={`text-xs font-bold ${tTextDark[ti]} mb-1.5 text-center truncate`}>{t.emoji} {t.name}</div>
+                                                <div className="grid grid-cols-4 gap-1.5">
+                                                    {q.options.map((opt, oi) => (
+                                                        <button key={oi} onClick={() => handlePick(ti, oi)}
+                                                            className={`h-10 rounded-lg font-bold text-xs team-pick-btn ${
+                                                                picks[ti] === oi
+                                                                    ? `${tBgDark[ti]} text-white ring-4 ${tRing[ti]} shadow-md`
+                                                                    : `bg-white border ${tBorder[ti]} ${tText[ti]}`
+                                                            }`}>
+                                                            {opt.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                {picks[ti] !== null && (
+                                                    <div className="mt-1 text-xs text-slate-400 text-center anim-fadeIn">
+                                                        ✓ Chọn {q.options[picks[ti]].label}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <button onClick={handleConfirm} disabled={!allPicked}
+                                        className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${
+                                            allPicked ? 'bg-gradient-to-r from-red-500 to-amber-500 text-white shadow-lg cursor-pointer btn-hover' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                                        }`}>
+                                        {allPicked ? '⚡ Xác nhận — Bẫy ở đâu?' : `Còn ${picks.filter(p => p === null).length} đội chưa chọn`}
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">📊 Kết quả câu {qIdx + 1}:</div>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                                        {teamInfo.map((t, ti) => {
+                                            const pts = curHist.points[ti];
+                                            const trapped = curHist.trapped[ti];
+                                            return (
+                                                <div key={ti}
+                                                    className={`rounded-xl border-2 p-3 text-center anim-fadeInUp fill-forwards ${
+                                                        trapped ? 'bg-red-50 border-red-300' : `${tBgLight[ti]} ${tBorderDark[ti]}`
+                                                    }`}
+                                                    style={{animationDelay: (ti * 0.1) + 's', opacity: 0}}>
+                                                    <div className={`text-xs font-bold ${trapped ? 'text-red-600' : tTextDark[ti]} mb-1 truncate`}>{t.emoji} {t.name}</div>
+                                                    {trapped && <div className="text-lg mb-1 anim-bounceIn fill-forwards">💀</div>}
+                                                    <div className={`inline-block text-xl font-black px-3 py-0.5 rounded-full border-2 anim-bounceIn fill-forwards ${getPointBadge(pts)}`}
+                                                         style={{animationDelay: (0.2 + ti * 0.1) + 's', opacity: 0}}>
+                                                        +{pts}
+                                                    </div>
+                                                    {trapped && <div className="text-red-500 text-xs font-bold mt-1">Dính bẫy!</div>}
+                                                    <div className="text-xs text-slate-400 mt-1">Tổng: <span className={`font-bold ${tTextDark[ti]}`}>{scores[ti]}</span></div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    <button onClick={handleNext}
+                                        className="w-full py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-red-500 to-amber-500 text-white shadow-lg flex items-center justify-center gap-2 btn-hover anim-fadeIn fill-forwards"
+                                        style={{animationDelay: '0.8s', opacity: 0}}>
+                                        {qIdx < questions.length - 1 ? (<>Câu tiếp theo →</>) : (<>🏆 Xem kết quả chung cuộc</>)}
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
                 </div>
-                <motion.button whileHover={allPicked ? { scale: 1.02 } : {}} whileTap={allPicked ? { scale: 0.98 } : {}}
-                  onClick={handleConfirm} disabled={!allPicked}
-                  className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${
-                    allPicked ? 'bg-gradient-to-r from-red-500 to-amber-500 text-white shadow-lg cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                  }`}>
-                  {allPicked ? '⚡ Xác nhận — Bẫy ở đâu?' : `Còn ${picks.filter(p => p === null).length} đội chưa chọn`}
-                </motion.button>
-              </>
-            ) : (
-              <>
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">📊 Kết quả câu {qIdx + 1}:</div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                  {teamInfo.map((t, ti) => {
-                    const pts = curHist.points[ti];
-                    const trapped = curHist.trapped[ti];
-                    return (
-                      <motion.div key={ti} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: ti * 0.1 }}
-                        className={`${trapped ? 'bg-red-50 border-red-300' : tBgLight[ti] + ' ' + tBorderDark[ti]} rounded-xl border-2 p-3 text-center`}>
-                        <div className={`text-xs font-bold ${trapped ? 'text-red-600' : tTextDark[ti]} mb-1 truncate`}>{t.emoji} {t.name}</div>
-                        {trapped && <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }} className="text-lg mb-1">💀</motion.div>}
-                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.2 + ti * 0.1 }}
-                          className={`inline-block text-xl font-black px-3 py-0.5 rounded-full border-2 ${getPointBadge(pts)}`}>
-                          +{pts}
-                        </motion.div>
-                        {trapped && <div className="text-red-500 text-xs font-bold mt-1">Dính bẫy!</div>}
-                        <div className="text-xs text-slate-400 mt-1">Tổng: <span className={`font-bold ${tTextDark[ti]}`}>{scores[ti]}</span></div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-                <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
-                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleNext}
-                  className="w-full py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-red-500 to-amber-500 text-white shadow-lg flex items-center justify-center gap-2">
-                  {qIdx < questions.length - 1 ? (<>Câu tiếp theo <ChevronRight className="w-4 h-4" /></>) : (<>🏆 Xem kết quả chung cuộc</>)}
-                </motion.button>
-              </>
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </div>
-    </div>
-  );
-}
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<OmotenashiTrap />);
+    </script>
+</body>
+</html>
