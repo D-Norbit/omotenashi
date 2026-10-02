@@ -39,9 +39,6 @@
             0% { transform: scale(1.4); }
             100% { transform: scale(1); }
         }
-        @keyframes progressGrow {
-            from { width: 0%; }
-        }
         @keyframes bounceIn {
             0% { opacity: 0; transform: scale(0.3); }
             50% { transform: scale(1.05); }
@@ -197,10 +194,10 @@
         ];
 
         const teamInfo = [
-            { name: 'O mê ly', emoji: '🤩' },
-            { name: 'Vui khoẻ có ích', emoji: '💪' },
-            { name: 'Ba xông phaa', emoji: '🔥' },
-            { name: 'Gen G', emoji: '⚡' },
+            { name: 'Nhóm 1', emoji: '🔴' },
+            { name: 'Nhóm 2', emoji: '🔵' },
+            { name: 'Nhóm 3', emoji: '🟡' },
+            { name: 'Nhóm 4', emoji: '🟢' },
         ];
 
         const tBgLight = ['bg-pink-50', 'bg-sky-50', 'bg-amber-50', 'bg-emerald-50'];
@@ -302,7 +299,7 @@
                             <div className="anim-fadeIn fill-forwards stagger-7 rounded-xl p-4 mb-6 text-left space-y-3"
                                  style={{background: 'rgba(69, 10, 10, 0.5)', border: '1px solid rgba(153, 27, 27, 0.5)'}}>
                                 <p className="text-slate-300 text-sm leading-relaxed">
-                                    <span className="text-white font-bold">🎯 10 tình huống</span> · 4 đội · Mỗi câu có <span className="text-red-400 font-bold">BẪY ẨN</span> — đáp án nghe "hoàn hảo" nhưng thực ra SAI!
+                                    <span className="text-white font-bold">🎯 10 tình huống</span> · 4 nhóm · Mỗi câu có <span className="text-red-400 font-bold">BẪY ẨN</span> — đáp án nghe "hoàn hảo" nhưng thực ra SAI!
                                 </p>
                                 <p className="text-red-400 text-xs leading-relaxed font-medium">
                                     💀 Cảnh báo: Đáp án "tận tâm nhất", "thật thà nhất", "hào phóng nhất" chưa chắc đã tốt nhất. Omotenashi đòi hỏi sự TINH TẾ — biết khi nào KHÔNG nên làm còn quan trọng hơn biết nên làm gì.
@@ -534,7 +531,7 @@
                                         className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${
                                             allPicked ? 'bg-gradient-to-r from-red-500 to-amber-500 text-white shadow-lg cursor-pointer btn-hover' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                                         }`}>
-                                        {allPicked ? '⚡ Xác nhận — Bẫy ở đâu?' : `Còn ${picks.filter(p => p === null).length} đội chưa chọn`}
+                                        {allPicked ? '⚡ Xác nhận — Bẫy ở đâu?' : `Còn ${picks.filter(p => p === null).length} nhóm chưa chọn`}
                                     </button>
                                 </>
                             ) : (
